@@ -1,0 +1,34 @@
+package com.example.gerenciamento_tickets.util;
+
+import com.example.gerenciamento_tickets.dto.CriarTicketRequestBody;
+import com.example.gerenciamento_tickets.model.Categoria;
+import com.example.gerenciamento_tickets.model.Ticket;
+import com.example.gerenciamento_tickets.model.TicketStatus;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public class TicketCreator {
+
+    private static final String TITULO = "Erro de login";
+    private static final String DESCRICAO = "Não consigo logar";
+    private static final String CATEGORIA = "Suporte";
+
+    public static Ticket validTicket() {
+        Categoria categoria = CategoriaCreator.validCategoria();
+        return Ticket.builder()
+                .id(1L)
+                .titulo(TITULO)
+                .criadoEm(LocalDateTime.now())
+                .prazoParaResolucao(LocalDateTime.now().plusHours(categoria.getPrazoDefaultEmHoras()))
+                .criadoPor(UsuarioCreator.usuario())
+                .usuarioResponsavel(UsuarioCreator.tecnico())
+                .comentarios(List.of(ComentarioCreator.comentario()))
+                .categoria(categoria)
+                .status(TicketStatus.ABERTO)
+                .build();
+    }
+    public static CriarTicketRequestBody criarTicketRequestBody() {
+        return new CriarTicketRequestBody(TITULO, DESCRICAO, CATEGORIA);
+    }
+}
