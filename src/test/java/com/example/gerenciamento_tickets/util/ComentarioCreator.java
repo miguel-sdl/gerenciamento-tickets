@@ -1,5 +1,6 @@
 package com.example.gerenciamento_tickets.util;
 
+import com.example.gerenciamento_tickets.dto.CriarComentarioRequestBody;
 import com.example.gerenciamento_tickets.model.Comentario;
 import com.example.gerenciamento_tickets.model.Ticket;
 
@@ -20,5 +21,9 @@ public class ComentarioCreator {
                         .criadoPor(UsuarioCreator.usuario())
                         .usuarioResponsavel(UsuarioCreator.tecnico()).build())
                 .build();
+    }
+
+    public static CriarComentarioRequestBody criarComentarioRequestBody() {
+        return new CriarComentarioRequestBody(1L, "Texto");
     }
 }

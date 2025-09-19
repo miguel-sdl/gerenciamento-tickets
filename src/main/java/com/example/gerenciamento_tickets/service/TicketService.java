@@ -1,8 +1,10 @@
 package com.example.gerenciamento_tickets.service;
 
+import com.example.gerenciamento_tickets.dto.CriarComentarioRequestBody;
 import com.example.gerenciamento_tickets.dto.CriarTicketRequestBody;
 import com.example.gerenciamento_tickets.dto.TicketResponseBody;
 import com.example.gerenciamento_tickets.exception.BadRequestException;
+import com.example.gerenciamento_tickets.exception.UnauthorizedException;
 import com.example.gerenciamento_tickets.mapper.TicketMapper;
 import com.example.gerenciamento_tickets.model.*;
 import com.example.gerenciamento_tickets.repository.CategoriaRepository;
@@ -48,5 +50,33 @@ public class TicketService {
 
         log.info("Salvando Ticket {}, criado por usuario {}", ticket.getTitulo(), usuario.getId());
         return TicketMapper.INSTANCE.toTicketResponseBody(ticketRepository.save(ticket));
+    }
+
+
+    public TicketResponseBody adicionarComentario(CriarComentarioRequestBody dto, Usuario usuario) {
+        Ticket ticket = ticketRepository.findById(dto.ticketId()).orElseThrow(() -> new BadRequestException("Ticket nao encontrado"));
+
+        if (!eAutorizadoParaAcessar(usuario, ticket)) {
+            log.warn("Usuario {} nao autorizado tentando comentar no ticket {}", usuario.getId(), ticket.getId());
+            throw new UnauthorizedException();
+        }
+
+        Comentario comentario = Comentario.builder()
+                .criadoEm(LocalDateTime.now())
+                .autor(usuario)
+                .texto(dto.texto())
+                .ticket(ticket)
+                .build();
+
+        ticket.adicionaComentario(comentario);
+
+        return TicketMapper.INSTANCE.toTicketResponseBody(ticketRepository.save(ticket));
+    }
+
+    private boolean eAutorizadoParaAcessar(Usuario usuario, Ticket ticket) {
+        if (usuario.getRole().equals(UserRole.ADMIN)) return true;
+
+        return ticket.getCriadoPor().equals(usuario) || ticket.getUsuarioResponsavel().equals(usuario);
+
     }
 }

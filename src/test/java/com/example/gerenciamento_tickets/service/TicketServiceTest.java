@@ -1,13 +1,16 @@
 package com.example.gerenciamento_tickets.service;
 
+import com.example.gerenciamento_tickets.dto.CriarComentarioRequestBody;
 import com.example.gerenciamento_tickets.dto.TicketResponseBody;
 import com.example.gerenciamento_tickets.exception.BadRequestException;
+import com.example.gerenciamento_tickets.exception.UnauthorizedException;
 import com.example.gerenciamento_tickets.model.Categoria;
 import com.example.gerenciamento_tickets.model.Ticket;
 import com.example.gerenciamento_tickets.model.Usuario;
 import com.example.gerenciamento_tickets.repository.CategoriaRepository;
 import com.example.gerenciamento_tickets.repository.TicketRepository;
 import com.example.gerenciamento_tickets.util.CategoriaCreator;
+import com.example.gerenciamento_tickets.util.ComentarioCreator;
 import com.example.gerenciamento_tickets.util.TicketCreator;
 import com.example.gerenciamento_tickets.util.UsuarioCreator;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,6 +92,85 @@ class TicketServiceTest {
         assertEquals(1, response.comentarios().size());
         assertEquals(request.descricao(), response.comentarios().getFirst().texto());
 
+        verify(ticketRepository).save(any(Ticket.class));
+    }
+
+    @Test
+    void adicionarComentario_deveLancarExcecao_quandoTicketNaoExistir() {
+        CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
+        when(ticketRepository.findById(any())).thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class,
+                () -> ticketService.adicionarComentario(request, usuario));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void adicionarComentario_deveLancarExcecao_quandoUsuarioNaoForCriadorDoTicket() {
+        Usuario outroUsuario = UsuarioCreator.outroUsuario();
+        CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
+
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+
+        assertThrows(UnauthorizedException.class,
+                () -> ticketService.adicionarComentario(request, outroUsuario));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void adicionarComentario_deveLancarExcecao_quandoTecnicoNaoForResponsavelDoTicket() {
+        Usuario outroUsuario = UsuarioCreator.outroTecnico();
+        CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
+
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+
+        assertThrows(UnauthorizedException.class,
+                () -> ticketService.adicionarComentario(request, outroUsuario));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void adicionarComentario_devePermitirComentario_quandoUsuarioForAdmin() {
+        Usuario admin = UsuarioCreator.admin();
+
+        CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(ticketRepository.save(any())).thenReturn(TicketCreator.validTicket());
+
+        TicketResponseBody response = ticketService.adicionarComentario(request, admin);
+
+        assertNotNull(response);
+        verify(ticketRepository).save(any(Ticket.class));
+    }
+
+    @Test
+    void adicionarComentario_devePermitirComentario_quandoUsuarioForCriadorDoTicket() {
+        Usuario usuario = UsuarioCreator.usuario();
+
+        CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(ticketRepository.save(any())).thenReturn(TicketCreator.validTicket());
+
+        TicketResponseBody response = ticketService.adicionarComentario(request, usuario);
+
+        assertNotNull(response);
+        verify(ticketRepository).save(any(Ticket.class));
+    }
+
+    @Test
+    void adicionarComentario_devePermitirComentario_quandoUsuarioForResponsavelDoTicket() {
+        Usuario tecnico = UsuarioCreator.tecnico();
+
+        CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(ticketRepository.save(any())).thenReturn(TicketCreator.validTicket());
+
+        TicketResponseBody response = ticketService.adicionarComentario(request, tecnico);
+
+        assertNotNull(response);
         verify(ticketRepository).save(any(Ticket.class));
     }
 }

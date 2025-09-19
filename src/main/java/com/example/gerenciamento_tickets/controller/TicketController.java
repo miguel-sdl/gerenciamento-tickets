@@ -1,5 +1,6 @@
 package com.example.gerenciamento_tickets.controller;
 
+import com.example.gerenciamento_tickets.dto.CriarComentarioRequestBody;
 import com.example.gerenciamento_tickets.dto.CriarTicketRequestBody;
 import com.example.gerenciamento_tickets.dto.TicketResponseBody;
 import com.example.gerenciamento_tickets.model.Usuario;
@@ -23,5 +24,11 @@ public class TicketController {
     public ResponseEntity<TicketResponseBody> criarTicket(@RequestBody @Valid CriarTicketRequestBody dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ticketService.criarTicket(dto, Usuario.builder().build()));
+    }
+
+    @PostMapping("/comentario")
+    public ResponseEntity<TicketResponseBody> adicionarComentario(@RequestBody @Valid CriarComentarioRequestBody dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ticketService.adicionarComentario(dto, Usuario.builder().build()));
     }
 }

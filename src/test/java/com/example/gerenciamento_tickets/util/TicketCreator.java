@@ -6,6 +6,7 @@ import com.example.gerenciamento_tickets.model.Ticket;
 import com.example.gerenciamento_tickets.model.TicketStatus;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TicketCreator {
@@ -23,11 +24,12 @@ public class TicketCreator {
                 .prazoParaResolucao(LocalDateTime.now().plusHours(categoria.getPrazoDefaultEmHoras()))
                 .criadoPor(UsuarioCreator.usuario())
                 .usuarioResponsavel(UsuarioCreator.tecnico())
-                .comentarios(List.of(ComentarioCreator.comentario()))
+                .comentarios(new ArrayList<>(List.of(ComentarioCreator.comentario())))
                 .categoria(categoria)
                 .status(TicketStatus.ABERTO)
                 .build();
     }
+
     public static CriarTicketRequestBody criarTicketRequestBody() {
         return new CriarTicketRequestBody(TITULO, DESCRICAO, CATEGORIA);
     }

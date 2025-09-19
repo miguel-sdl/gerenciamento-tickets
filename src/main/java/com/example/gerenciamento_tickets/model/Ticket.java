@@ -39,4 +39,7 @@ public class Ticket {
     @ManyToOne
     private Categoria categoria;
 
+    public void adicionaComentario(Comentario comentario) {
+        this.comentarios.add(comentario);
+    }
 }
