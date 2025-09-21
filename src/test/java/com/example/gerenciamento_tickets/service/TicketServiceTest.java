@@ -1,6 +1,7 @@
 package com.example.gerenciamento_tickets.service;
 
 import com.example.gerenciamento_tickets.dto.CriarComentarioRequestBody;
+import com.example.gerenciamento_tickets.dto.CriarTicketRequestBody;
 import com.example.gerenciamento_tickets.dto.TicketResponseBody;
 import com.example.gerenciamento_tickets.exception.BadRequestException;
 import com.example.gerenciamento_tickets.exception.UnauthorizedException;
@@ -41,57 +42,58 @@ class TicketServiceTest {
     private TicketService ticketService;
 
     private Usuario usuario;
+    private Usuario tecnico;
+    private Usuario admin;
+    private Ticket validTicket;
+    private CriarTicketRequestBody criarTicketRequestBody;
 
     @BeforeEach
     void setUp() {
         usuario = UsuarioCreator.usuario();
+        tecnico = UsuarioCreator.tecnico();
+        admin = UsuarioCreator.admin();
+        validTicket = TicketCreator.validTicket();
+        criarTicketRequestBody = TicketCreator.criarTicketRequestBody();
     }
 
     @Test
     void criarTicket_deveLancarExcecao_quandoCategoriaNaoExistir() {
-        var request = TicketCreator.criarTicketRequestBody();
-
         when(categoriaRepository.findByNome(any())).thenReturn(Optional.empty());
 
         assertThrows(BadRequestException.class,
-                () -> ticketService.criarTicket(request, usuario));
+                () -> ticketService.criarTicket(criarTicketRequestBody, usuario));
 
         verify(ticketRepository, never()).save(any());
     }
 
     @Test
     void criarTicket_deveLancarExcecao_quandoNaoExistiremTecnicosDisponiveis() {
-        var request = TicketCreator.criarTicketRequestBody();
-
         when(categoriaRepository.findByNome(any())).thenReturn(Optional.of(CategoriaCreator.categoriaSemTecnicoDisponivel()));
 
         assertThrows(BadRequestException.class,
-                () -> ticketService.criarTicket(request, usuario));
+                () -> ticketService.criarTicket(criarTicketRequestBody, usuario));
 
         verify(ticketRepository, never()).save(any());
     }
 
     @Test
     void criarTicket_deveCriarTicket_quandoCategoriaExisteETecnicoDisponivel() {
-        var request = TicketCreator.criarTicketRequestBody();
-
         Categoria categoria = CategoriaCreator.validCategoria();
 
-
         when(categoriaRepository.findByNome(any())).thenReturn(Optional.of(categoria));
-        when(ticketRepository.save(any())).thenReturn(TicketCreator.validTicket());
+        when(ticketRepository.save(any())).thenReturn(validTicket);
 
-        TicketResponseBody response = ticketService.criarTicket(request, usuario);
+        TicketResponseBody response = ticketService.criarTicket(criarTicketRequestBody, usuario);
 
         assertNotNull(response);
-        assertEquals(request.titulo(), response.titulo());
+        assertEquals(criarTicketRequestBody.titulo(), response.titulo());
         assertEquals(usuario.getUsername(), response.criadoPor());
         assertEquals(categoria.getUsuariosResponsaveis().getFirst().getUsername(), response.usuarioResponsavel());
-        assertEquals(request.categoria(), response.categoria());
+        assertEquals(criarTicketRequestBody.categoria(), response.categoria());
         assertTrue(response.prazoParaResolucao().isAfter(response.criadoEm()));
         assertNotNull(response.comentarios());
         assertEquals(1, response.comentarios().size());
-        assertEquals(request.descricao(), response.comentarios().getFirst().texto());
+        assertEquals(criarTicketRequestBody.descricao(), response.comentarios().getFirst().texto());
 
         verify(ticketRepository).save(any(Ticket.class));
     }
@@ -112,7 +114,7 @@ class TicketServiceTest {
         Usuario outroUsuario = UsuarioCreator.outroUsuario();
         CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
 
-        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(validTicket));
 
         assertThrows(UnauthorizedException.class,
                 () -> ticketService.adicionarComentario(request, outroUsuario));
@@ -125,7 +127,7 @@ class TicketServiceTest {
         Usuario outroUsuario = UsuarioCreator.outroTecnico();
         CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
 
-        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(validTicket));
 
         assertThrows(UnauthorizedException.class,
                 () -> ticketService.adicionarComentario(request, outroUsuario));
@@ -135,11 +137,9 @@ class TicketServiceTest {
 
     @Test
     void adicionarComentario_devePermitirComentario_quandoUsuarioForAdmin() {
-        Usuario admin = UsuarioCreator.admin();
-
         CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
-        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
-        when(ticketRepository.save(any())).thenReturn(TicketCreator.validTicket());
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(validTicket));
+        when(ticketRepository.save(any())).thenReturn(validTicket);
 
         TicketResponseBody response = ticketService.adicionarComentario(request, admin);
 
@@ -149,11 +149,9 @@ class TicketServiceTest {
 
     @Test
     void adicionarComentario_devePermitirComentario_quandoUsuarioForCriadorDoTicket() {
-        Usuario usuario = UsuarioCreator.usuario();
-
         CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
-        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
-        when(ticketRepository.save(any())).thenReturn(TicketCreator.validTicket());
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(validTicket));
+        when(ticketRepository.save(any())).thenReturn(validTicket);
 
         TicketResponseBody response = ticketService.adicionarComentario(request, usuario);
 
@@ -163,11 +161,9 @@ class TicketServiceTest {
 
     @Test
     void adicionarComentario_devePermitirComentario_quandoUsuarioForResponsavelDoTicket() {
-        Usuario tecnico = UsuarioCreator.tecnico();
-
         CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
-        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
-        when(ticketRepository.save(any())).thenReturn(TicketCreator.validTicket());
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(validTicket));
+        when(ticketRepository.save(any())).thenReturn(validTicket);
 
         TicketResponseBody response = ticketService.adicionarComentario(request, tecnico);
 
@@ -189,7 +185,7 @@ class TicketServiceTest {
     void findById_deveLancarExcecao_quandoUsuarioNaoForCriadorDoTicket() {
         Usuario outroUsuario = UsuarioCreator.outroUsuario();
 
-        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(validTicket));
 
         assertThrows(UnauthorizedException.class,
                 () -> ticketService.findById(1, outroUsuario));
@@ -199,7 +195,7 @@ class TicketServiceTest {
     void findById_deveLancarExcecao_quandoTecnicoNaoForResponsavelDoTicket() {
         Usuario outroTecnico = UsuarioCreator.outroTecnico();
 
-        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(validTicket));
 
         assertThrows(UnauthorizedException.class,
                 () -> ticketService.findById(1, outroTecnico));
@@ -208,7 +204,7 @@ class TicketServiceTest {
     @Test
     void findById_deveRetornarTicket_quandoExistir() {
 
-        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(validTicket));
 
         TicketResponseBody response = ticketService.findById(1L, usuario);
 
@@ -218,14 +214,11 @@ class TicketServiceTest {
 
     @Test
     void findAll_deveRetornarTodosTickets_quandoUsuarioForAdmin() {
-        Usuario admin = UsuarioCreator.admin();
-        Ticket ticket = TicketCreator.validTicket();
         Ticket ticket2 = TicketCreator.validTicketComUsuarioComoCriadorEOutroTecnicoComoResponsavel();
         Ticket ticket3 = TicketCreator.validTicketComOutroUsuarioComoCriadorETecnicoComoResponsavel();
         Ticket ticket4 = TicketCreator.validTicketComTecnicoComoCriadorEOutroTecnicoComoResponsavel();
 
-
-        when(ticketRepository.findAll()).thenReturn(List.of(ticket, ticket2, ticket3, ticket4));
+        when(ticketRepository.findAll()).thenReturn(List.of(validTicket, ticket2, ticket3, ticket4));
 
         List<TicketResponseBody> response = ticketService.findAllTicketsByUser(admin);
 
@@ -235,17 +228,15 @@ class TicketServiceTest {
 
     @Test
     void findAll_deveRetornarSomenteTicketsCriadosPeloUsuario_quandoUsuarioForRoleUSER() {
-        Ticket ticket = TicketCreator.validTicket();
         Ticket ticket2 = TicketCreator.validTicketComUsuarioComoCriadorEOutroTecnicoComoResponsavel();
 
-
-        when(ticketRepository.findByCriadoPor(any())).thenReturn(List.of(ticket, ticket2));
+        when(ticketRepository.findByCriadoPor(any())).thenReturn(List.of(validTicket, ticket2));
 
         List<TicketResponseBody> response = ticketService.findAllTicketsByUser(usuario);
 
         assertNotNull(response);
         assertEquals(2, response.size());
-        assertEquals(ticket.getId(), response.getFirst().id());
+        assertEquals(validTicket.getId(), response.getFirst().id());
 
         verify(ticketRepository, never()).findByUsuarioResponsavel(any());
         verify(ticketRepository, never()).findAll();
@@ -254,15 +245,12 @@ class TicketServiceTest {
 
     @Test
     void findAll_deveRetonarTicketsQueEResponsavelETicketsCriados_quandoUsuarioForTecnico() {
-        Usuario tecnico = UsuarioCreator.tecnico();
-
-        Ticket ticket = TicketCreator.validTicket();
-        Ticket ticket3 = TicketCreator.validTicketComOutroUsuarioComoCriadorETecnicoComoResponsavel();
-        Ticket ticket4 = TicketCreator.validTicketComTecnicoComoCriadorEOutroTecnicoComoResponsavel();
+        Ticket ticket2 = TicketCreator.validTicketComOutroUsuarioComoCriadorETecnicoComoResponsavel();
+        Ticket ticket3 = TicketCreator.validTicketComTecnicoComoCriadorEOutroTecnicoComoResponsavel();
 
 
-        when(ticketRepository.findByUsuarioResponsavel(any())).thenReturn(List.of(ticket, ticket3));
-        when(ticketRepository.findByCriadoPor(any())).thenReturn(List.of(ticket4));
+        when(ticketRepository.findByUsuarioResponsavel(any())).thenReturn(List.of(validTicket, ticket2));
+        when(ticketRepository.findByCriadoPor(any())).thenReturn(List.of(ticket3));
 
         List<TicketResponseBody> response = ticketService.findAllTicketsByUser(tecnico);
 
