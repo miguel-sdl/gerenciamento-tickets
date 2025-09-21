@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -71,6 +72,42 @@ public class TicketService {
         ticket.adicionaComentario(comentario);
 
         return TicketMapper.INSTANCE.toTicketResponseBody(ticketRepository.save(ticket));
+    }
+
+    public TicketResponseBody findById(long id, Usuario usuario) {
+        log.info("Buscando Ticket {}", id);
+        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new BadRequestException("Ticket com id " + id + " nao encontrado"));
+
+        if (!eAutorizadoParaAcessar(usuario, ticket)) {
+            log.warn("Usuario {} nao autorizado tentando acessar o ticket {}", usuario.getId(), ticket.getId());
+            throw new UnauthorizedException();
+        }
+
+        log.info("Retornando Ticket {}", ticket.getId());
+        return TicketMapper.INSTANCE.toTicketResponseBody(ticket);
+    }
+
+    public List<TicketResponseBody> findAllTicketsByUser(Usuario usuario) {
+        log.info("Buscando Tickets do Usuario {}", usuario.getId());
+        List<TicketResponseBody> ticketsResponse = new ArrayList<>();
+
+        if (usuario.getRole().equals(UserRole.ADMIN)) {
+            ticketRepository.findAll().
+                    forEach(ticket -> ticketsResponse.add(TicketMapper.INSTANCE.toTicketResponseBody(ticket)));
+            return ticketsResponse;
+        }
+
+        if (usuario.getRole().equals(UserRole.TECNICO)) {
+            ticketRepository.findByUsuarioResponsavel(usuario)
+                    .forEach(ticket -> ticketsResponse.add(TicketMapper.INSTANCE.toTicketResponseBody(ticket)));
+        }
+
+        ticketRepository.findByCriadoPor(usuario)
+                .forEach(ticket -> ticketsResponse.add(TicketMapper.INSTANCE.toTicketResponseBody(ticket)));
+
+        log.info("Retornando Tickets do Usuario {}", usuario.getId());
+        return ticketsResponse;
+
     }
 
     private boolean eAutorizadoParaAcessar(Usuario usuario, Ticket ticket) {

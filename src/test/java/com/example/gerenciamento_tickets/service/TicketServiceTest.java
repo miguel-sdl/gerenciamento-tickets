@@ -20,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -172,5 +173,102 @@ class TicketServiceTest {
 
         assertNotNull(response);
         verify(ticketRepository).save(any(Ticket.class));
+    }
+
+
+    @Test
+    void findById_deveLancarExcecao_quandoTicketNaoExistir() {
+
+        when(ticketRepository.findById(any())).thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class,
+                () -> ticketService.findById(1, usuario));
+    }
+
+    @Test
+    void findById_deveLancarExcecao_quandoUsuarioNaoForCriadorDoTicket() {
+        Usuario outroUsuario = UsuarioCreator.outroUsuario();
+
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+
+        assertThrows(UnauthorizedException.class,
+                () -> ticketService.findById(1, outroUsuario));
+    }
+
+    @Test
+    void findById_deveLancarExcecao_quandoTecnicoNaoForResponsavelDoTicket() {
+        Usuario outroTecnico = UsuarioCreator.outroTecnico();
+
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+
+        assertThrows(UnauthorizedException.class,
+                () -> ticketService.findById(1, outroTecnico));
+    }
+
+    @Test
+    void findById_deveRetornarTicket_quandoExistir() {
+
+        when(ticketRepository.findById(any())).thenReturn(Optional.of(TicketCreator.validTicket()));
+
+        TicketResponseBody response = ticketService.findById(1L, usuario);
+
+        assertNotNull(response);
+        assertEquals(TicketCreator.validTicket().getTitulo(), response.titulo());
+    }
+
+    @Test
+    void findAll_deveRetornarTodosTickets_quandoUsuarioForAdmin() {
+        Usuario admin = UsuarioCreator.admin();
+        Ticket ticket = TicketCreator.validTicket();
+        Ticket ticket2 = TicketCreator.validTicketComUsuarioComoCriadorEOutroTecnicoComoResponsavel();
+        Ticket ticket3 = TicketCreator.validTicketComOutroUsuarioComoCriadorETecnicoComoResponsavel();
+        Ticket ticket4 = TicketCreator.validTicketComTecnicoComoCriadorEOutroTecnicoComoResponsavel();
+
+
+        when(ticketRepository.findAll()).thenReturn(List.of(ticket, ticket2, ticket3, ticket4));
+
+        List<TicketResponseBody> response = ticketService.findAllTicketsByUser(admin);
+
+        assertNotNull(response);
+        assertEquals(4, response.size());
+    }
+
+    @Test
+    void findAll_deveRetornarSomenteTicketsCriadosPeloUsuario_quandoUsuarioForRoleUSER() {
+        Ticket ticket = TicketCreator.validTicket();
+        Ticket ticket2 = TicketCreator.validTicketComUsuarioComoCriadorEOutroTecnicoComoResponsavel();
+
+
+        when(ticketRepository.findByCriadoPor(any())).thenReturn(List.of(ticket, ticket2));
+
+        List<TicketResponseBody> response = ticketService.findAllTicketsByUser(usuario);
+
+        assertNotNull(response);
+        assertEquals(2, response.size());
+        assertEquals(ticket.getId(), response.getFirst().id());
+
+        verify(ticketRepository, never()).findByUsuarioResponsavel(any());
+        verify(ticketRepository, never()).findAll();
+    }
+
+
+    @Test
+    void findAll_deveRetonarTicketsQueEResponsavelETicketsCriados_quandoUsuarioForTecnico() {
+        Usuario tecnico = UsuarioCreator.tecnico();
+
+        Ticket ticket = TicketCreator.validTicket();
+        Ticket ticket3 = TicketCreator.validTicketComOutroUsuarioComoCriadorETecnicoComoResponsavel();
+        Ticket ticket4 = TicketCreator.validTicketComTecnicoComoCriadorEOutroTecnicoComoResponsavel();
+
+
+        when(ticketRepository.findByUsuarioResponsavel(any())).thenReturn(List.of(ticket, ticket3));
+        when(ticketRepository.findByCriadoPor(any())).thenReturn(List.of(ticket4));
+
+        List<TicketResponseBody> response = ticketService.findAllTicketsByUser(tecnico);
+
+        assertNotNull(response);
+        assertEquals(3, response.size());
+
+        verify(ticketRepository, never()).findAll();
     }
 }

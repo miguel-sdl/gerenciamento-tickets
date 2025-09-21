@@ -9,16 +9,28 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/tickets")
 public class TicketController {
     private final TicketService ticketService;
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TicketResponseBody> findById(@PathVariable long id) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ticketService.findById(id, Usuario.builder().build()));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<TicketResponseBody>> findAllTicketsByUser() {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ticketService.findAllTicketsByUser(Usuario.builder().build()));
+    }
+
 
     @PostMapping
     public ResponseEntity<TicketResponseBody> criarTicket(@RequestBody @Valid CriarTicketRequestBody dto) {
