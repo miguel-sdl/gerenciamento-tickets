@@ -7,12 +7,15 @@ import com.example.gerenciamento_tickets.mapper.UsuarioMapper;
 import com.example.gerenciamento_tickets.model.Usuario;
 import com.example.gerenciamento_tickets.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
 public class AuthService {
     private final UsuarioRepository usuarioRepository;
+
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioResponseBody register(RegisterRequestBody dto) {
         usuarioRepository.findByUsername(dto.username()).ifPresent(usuario -> {
@@ -21,7 +24,7 @@ public class AuthService {
 
         Usuario usuario = Usuario.builder()
                 .username(dto.username())
-                .password(dto.password())
+                .password(passwordEncoder.encode(dto.password()))
                 .role(dto.role())
                 .build();
 
