@@ -1,5 +1,6 @@
 package com.example.gerenciamento_tickets.util;
 
+import com.example.gerenciamento_tickets.dto.LoginRequestBody;
 import com.example.gerenciamento_tickets.dto.RegisterRequestBody;
 import com.example.gerenciamento_tickets.model.UserRole;
 import com.example.gerenciamento_tickets.model.Usuario;
@@ -48,5 +49,9 @@ public class UsuarioCreator {
 
     public static RegisterRequestBody registerRequestBody() {
         return new RegisterRequestBody("usuario", "password", UserRole.USER);
+    }
+
+    public static LoginRequestBody loginRequestBody() {
+        return new LoginRequestBody("usuario", "password");
     }
 }

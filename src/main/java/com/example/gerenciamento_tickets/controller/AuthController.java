@@ -1,5 +1,6 @@
 package com.example.gerenciamento_tickets.controller;
 
+import com.example.gerenciamento_tickets.dto.LoginRequestBody;
 import com.example.gerenciamento_tickets.dto.RegisterRequestBody;
 import com.example.gerenciamento_tickets.dto.UsuarioResponseBody;
 import com.example.gerenciamento_tickets.service.AuthService;
@@ -23,5 +24,11 @@ public class AuthController {
     public ResponseEntity<UsuarioResponseBody> register(@RequestBody @Valid RegisterRequestBody dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(authService.register(dto));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody @Valid LoginRequestBody dto) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(authService.login(dto));
     }
 }
