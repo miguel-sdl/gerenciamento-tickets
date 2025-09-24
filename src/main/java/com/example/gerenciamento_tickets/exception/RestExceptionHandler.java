@@ -2,6 +2,7 @@ package com.example.gerenciamento_tickets.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -46,5 +47,17 @@ public class RestExceptionHandler {
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<Void> handleUnauthorizedException(UnauthorizedException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ExceptionResponse> handleBadCredentialsException(BadCredentialsException e) {
+        ExceptionResponse body = ExceptionResponse.builder()
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .title("Bad Credentials")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now()).build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(body);
     }
 }

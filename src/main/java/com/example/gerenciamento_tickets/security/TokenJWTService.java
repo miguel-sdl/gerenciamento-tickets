@@ -29,4 +29,11 @@ public class TokenJWTService {
                 .withExpiresAt(Instant.now().plusMillis(EXPIRES_AT_MILLIS))
                 .sign(ALGORITHM);
     }
+
+    public String validateToken(String token) {
+        return JWT.require(ALGORITHM)
+                .build()
+                .verify(token)
+                .getSubject();
+    }
 }
