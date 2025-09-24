@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,27 +22,29 @@ public class TicketController {
     private final TicketService ticketService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<TicketResponseBody> findById(@PathVariable long id) {
+    public ResponseEntity<TicketResponseBody> findById(@PathVariable long id, @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ticketService.findById(id, Usuario.builder().build()));
+                .body(ticketService.findById(id, (Usuario) userDetails));
     }
 
     @GetMapping
-    public ResponseEntity<List<TicketResponseBody>> findAllTicketsByUser() {
+    public ResponseEntity<List<TicketResponseBody>> findAllTicketsByUser(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ticketService.findAllTicketsByUser(Usuario.builder().build()));
+                .body(ticketService.findAllTicketsByUser((Usuario) userDetails));
     }
 
 
     @PostMapping
-    public ResponseEntity<TicketResponseBody> criarTicket(@RequestBody @Valid CriarTicketRequestBody dto) {
+    public ResponseEntity<TicketResponseBody> criarTicket(@RequestBody @Valid CriarTicketRequestBody dto,
+                                                          @AuthenticationPrincipal UserDetails userdetails) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ticketService.criarTicket(dto, Usuario.builder().build()));
+                .body(ticketService.criarTicket(dto, (Usuario) userdetails));
     }
 
     @PostMapping("/comentario")
-    public ResponseEntity<TicketResponseBody> adicionarComentario(@RequestBody @Valid CriarComentarioRequestBody dto) {
+    public ResponseEntity<TicketResponseBody> adicionarComentario(@RequestBody @Valid CriarComentarioRequestBody dto,
+                                                                  @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ticketService.adicionarComentario(dto, Usuario.builder().build()));
+                .body(ticketService.adicionarComentario(dto, (Usuario) userDetails));
     }
 }
