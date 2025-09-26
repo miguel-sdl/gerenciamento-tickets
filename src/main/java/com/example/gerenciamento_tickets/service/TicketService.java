@@ -41,13 +41,14 @@ public class TicketService {
 
         Ticket ticket = Ticket.builder()
                 .titulo(dto.titulo())
-                .comentarios(List.of(primeiroComentario))
+                .comentarios(new ArrayList<>(List.of(primeiroComentario)))
                 .status(TicketStatus.ABERTO)
                 .criadoPor(usuario)
                 .usuarioResponsavel(usuarioResponsavel)
                 .categoria(categoria)
                 .criadoEm(now)
                 .prazoParaResolucao(now.plusHours(categoria.getPrazoDefaultEmHoras())).build();
+        primeiroComentario.setTicket(ticket);
 
         log.info("Salvando Ticket {}, criado por usuario {}", ticket.getTitulo(), usuario.getId());
         return TicketMapper.INSTANCE.toTicketResponseBody(ticketRepository.save(ticket));
