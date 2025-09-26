@@ -33,8 +33,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
                         .requestMatchers(ENDPOINTS_PERMITIDOS_SEM_AUTENTICAR).permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/admin/**").hasRole(ADMIN.name())
-                        .requestMatchers("/ticket/resolver/**").hasAnyRole(ADMIN.name(), TECNICO.name())
+                        .requestMatchers("/admin/**").hasAuthority(ADMIN.name())
+                        .requestMatchers("/ticket/resolver/**").hasAnyAuthority(ADMIN.name(), TECNICO.name())
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtSecurityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
