@@ -17,8 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,6 +74,38 @@ class AdminTicketServiceTest {
         assertNotNull(response);
         verify(categoriaRepository).save(any(Categoria.class));
 
+    }
+
+    @Test
+    void atualizarCategoria_deveLancarExcecao_quandoNaoExisteEncontraCategoriaParaAtualizar() {
+        when(categoriaRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class, () -> adminTicketService.atualizarCategoria(CategoriaCreator.atualizarCategoriaRequestBody()));
+
+        verify(categoriaRepository, never()).save(any());
+    }
+
+    @Test
+    void atualizarCategoria_deveLancarExcecao_quandoAlgumUsuarioForRoleUser() {
+        when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(categoria));
+
+        when(usuarioRepository.findAllById(any())).thenReturn(List.of(UsuarioCreator.usuario()));
+
+        assertThrows(BadRequestException.class,
+                () -> adminTicketService.atualizarCategoria(CategoriaCreator.atualizarCategoriaRequestBody()));
+
+        verify(categoriaRepository, never()).save(any());
+
+    }
+
+    @Test
+    void atualizarCategoria_deveAtualizarCategoria_quandoEncontraCategoriaENaoRecebeIdDeUsuarioRoleUser() {
+        when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(categoria));
+        when(usuarioRepository.findAllById(any())).thenReturn(List.of(UsuarioCreator.tecnico()));
+
+        assertDoesNotThrow(() -> adminTicketService.atualizarCategoria(CategoriaCreator.atualizarCategoriaRequestBody()));
+
+        verify(categoriaRepository).save(any(Categoria.class));
     }
 
 }

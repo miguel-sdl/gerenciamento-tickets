@@ -1,5 +1,6 @@
 package com.example.gerenciamento_tickets.controller;
 
+import com.example.gerenciamento_tickets.dto.AtualizarCategoriaRequestBody;
 import com.example.gerenciamento_tickets.dto.CategoriaResponseBody;
 import com.example.gerenciamento_tickets.dto.CriarCategoriaRequestBody;
 import com.example.gerenciamento_tickets.service.AdminTicketService;
@@ -7,10 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
@@ -23,6 +21,12 @@ public class AdminTicketsController {
     public ResponseEntity<CategoriaResponseBody> criarCategoria(@RequestBody @Valid CriarCategoriaRequestBody dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(adminTicketService.criarCategoria(dto));
+    }
+
+    @PutMapping("/categoria")
+    public ResponseEntity<Void> atualizarCategoria(@RequestBody @Valid AtualizarCategoriaRequestBody dto) {
+        adminTicketService.atualizarCategoria(dto);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
 }

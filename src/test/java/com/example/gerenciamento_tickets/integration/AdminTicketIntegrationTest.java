@@ -1,12 +1,16 @@
 package com.example.gerenciamento_tickets.integration;
 
+import com.example.gerenciamento_tickets.dto.AtualizarCategoriaRequestBody;
+import com.example.gerenciamento_tickets.model.Categoria;
 import com.example.gerenciamento_tickets.model.Usuario;
+import com.example.gerenciamento_tickets.repository.CategoriaRepository;
 import com.example.gerenciamento_tickets.repository.UsuarioRepository;
 import com.example.gerenciamento_tickets.security.TokenJWTService;
 import com.example.gerenciamento_tickets.util.CategoriaCreator;
 import com.example.gerenciamento_tickets.util.UsuarioCreator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +21,10 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,6 +41,9 @@ public class AdminTicketIntegrationTest {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private CategoriaRepository categoriaRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -75,17 +85,32 @@ public class AdminTicketIntegrationTest {
 
     @Test
     void deveNegarAcesso_quandoUsuarioNaoAdmin() throws Exception {
-        var dto = CategoriaCreator.criarCategoriaRequestBody();
+        var criarCategoraDto = CategoriaCreator.criarCategoriaRequestBody();
 
         mockMvc.perform(post("/admin/tickets/categoria")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto))
+                        .content(objectMapper.writeValueAsString(criarCategoraDto))
                         .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/admin/tickets/categoria")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto))
+                        .content(objectMapper.writeValueAsString(criarCategoraDto))
+                        .header("Authorization", "Bearer " + tecnicoToken))
+                .andExpect(status().isForbidden());
+
+
+        var atualizarCategoriaDto = CategoriaCreator.atualizarCategoriaRequestBody();
+
+        mockMvc.perform(put("/admin/tickets/categoria")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(atualizarCategoriaDto))
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(put("/admin/tickets/categoria")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(atualizarCategoriaDto))
                         .header("Authorization", "Bearer " + tecnicoToken))
                 .andExpect(status().isForbidden());
     }
@@ -99,5 +124,46 @@ public class AdminTicketIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(put("/admin/tickets/categoria")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(CategoriaCreator.atualizarCategoriaRequestBody())))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deveAtualizarSomenteCamposInformados_QuandoAdmin() throws Exception {
+        var criarCategoriDto = CategoriaCreator.criarCategoriaRequestBody();
+
+        String content = mockMvc.perform(post("/admin/tickets/categoria")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(criarCategoriDto))
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+
+        long id = objectMapper.readTree(content).get("id").asLong();
+        Categoria antesDeAtualizar = categoriaRepository.findById(id).orElseThrow();
+        String nomeAntesDeAtualizar = antesDeAtualizar.getNome();
+        int prazoDefaultEmHorasAntesDeAtualizar = antesDeAtualizar.getPrazoDefaultEmHoras();
+        List<Usuario> usuariosResponsaveisAntesDeAtualizar = antesDeAtualizar.getUsuariosResponsaveis();
+
+
+        var atualizarCategoriaDto = new AtualizarCategoriaRequestBody(id, "Outro Nome", null, null);
+
+        mockMvc.perform(put("/admin/tickets/categoria")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(atualizarCategoriaDto))
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNoContent());
+
+        Categoria depoisDeAtualizar = categoriaRepository.findById(id).orElseThrow();
+
+        Assertions.assertEquals(prazoDefaultEmHorasAntesDeAtualizar, depoisDeAtualizar.getPrazoDefaultEmHoras());
+        Assertions.assertEquals(usuariosResponsaveisAntesDeAtualizar, depoisDeAtualizar.getUsuariosResponsaveis());
+        Assertions.assertNotEquals(nomeAntesDeAtualizar, depoisDeAtualizar.getNome());
+        Assertions.assertEquals("Outro Nome", depoisDeAtualizar.getNome());
+
     }
 }

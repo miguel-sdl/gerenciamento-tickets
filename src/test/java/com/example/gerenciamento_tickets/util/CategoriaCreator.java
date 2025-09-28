@@ -1,5 +1,6 @@
 package com.example.gerenciamento_tickets.util;
 
+import com.example.gerenciamento_tickets.dto.AtualizarCategoriaRequestBody;
 import com.example.gerenciamento_tickets.dto.CriarCategoriaRequestBody;
 import com.example.gerenciamento_tickets.model.Categoria;
 
@@ -23,5 +24,9 @@ public class CategoriaCreator {
 
     public static CriarCategoriaRequestBody criarCategoriaRequestBody() {
         return new CriarCategoriaRequestBody("Suporte", 24, List.of(1L, 2L));
+    }
+
+    public static AtualizarCategoriaRequestBody atualizarCategoriaRequestBody() {
+        return new AtualizarCategoriaRequestBody(1L, "Suporte", 24, List.of(1L,2L));
     }
 }

@@ -1,5 +1,6 @@
 package com.example.gerenciamento_tickets.service;
 
+import com.example.gerenciamento_tickets.dto.AtualizarCategoriaRequestBody;
 import com.example.gerenciamento_tickets.dto.CategoriaResponseBody;
 import com.example.gerenciamento_tickets.dto.CriarCategoriaRequestBody;
 import com.example.gerenciamento_tickets.exception.BadRequestException;
@@ -49,5 +50,26 @@ public class AdminTicketService {
 
         log.info("Criando categoria {}", categoria.getNome());
         return CategoriaMapper.INSTANCE.toCategoriaResponseBody(categoriaRepository.save(categoria));
+    }
+
+    public void atualizarCategoria(AtualizarCategoriaRequestBody dto) {
+        Categoria categoria = categoriaRepository.findById(dto.id()).orElseThrow(() -> new BadRequestException("Categoria não encontrada"));
+
+        if (dto.nome() != null) categoria.setNome(dto.nome());
+        if (dto.prazoDefaultEmHoras() != null) categoria.setPrazoDefaultEmHoras(dto.prazoDefaultEmHoras());
+
+
+        if (dto.usuariosResponsaveis() != null && !dto.usuariosResponsaveis().isEmpty()) {
+            List<Usuario> usuariosResponsaveis = usuarioRepository.findAllById(dto.usuariosResponsaveis());
+
+            if (usuariosResponsaveis.stream().anyMatch(usuario -> usuario.getRole().equals(UserRole.USER))) {
+                throw new BadRequestException("Nao e permitido que um usuario comum seja um usuario responsavel");
+            }
+
+            categoria.setUsuariosResponsaveis(usuariosResponsaveis);
+        }
+
+        categoriaRepository.save(categoria);
+        log.info("Atualizando categoria {}", categoria.getId());
     }
 }
