@@ -10,6 +10,7 @@ import java.util.List;
 public record TicketResponseBody(Long id, String titulo, TicketStatus status, LocalDateTime criadoEm,
                                  LocalDateTime prazoParaResolucao,
                                  String criadoPor, String usuarioResponsavel,
+                                 LocalDateTime resolvidoEm,
                                  List<ComentarioResponseBody> comentarios, String categoria) {
 
 }
