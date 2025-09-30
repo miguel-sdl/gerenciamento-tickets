@@ -47,4 +47,11 @@ public class TicketController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ticketService.adicionarComentario(dto, (Usuario) userDetails));
     }
+
+    @PostMapping("/{id}/resolver")
+    public ResponseEntity<TicketResponseBody> resolver(@PathVariable Long id,
+                                                       @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ticketService.resolverTicket(id, (Usuario) userDetails));
+    }
 }

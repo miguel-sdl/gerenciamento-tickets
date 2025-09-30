@@ -1,6 +1,7 @@
 package com.example.gerenciamento_tickets.integration;
 
 import com.example.gerenciamento_tickets.model.Categoria;
+import com.example.gerenciamento_tickets.model.TicketStatus;
 import com.example.gerenciamento_tickets.model.Usuario;
 import com.example.gerenciamento_tickets.repository.CategoriaRepository;
 import com.example.gerenciamento_tickets.repository.UsuarioRepository;
@@ -52,16 +53,22 @@ public class TicketControllerIntegrationTest {
     private TokenJWTService tokenJWTService;
 
     private String token;
-
+    private String adminToken;
+    private String tecnicoToken;
 
     @BeforeEach
     void setup() throws Exception {
         Usuario usuario = UsuarioCreator.usuarioParaSalvar(passwordEncoder);
         usuarioRepository.save(usuario);
-        token = tokenJWTService.generateToken(usuario);
-
         Usuario tecnico = UsuarioCreator.tecnicoParaSalvar(passwordEncoder);
         usuarioRepository.save(tecnico);
+        Usuario admin = UsuarioCreator.adminParaSalvar(passwordEncoder);
+        usuarioRepository.save(admin);
+
+        token = tokenJWTService.generateToken(usuario);
+        adminToken = tokenJWTService.generateToken(admin);
+        tecnicoToken = tokenJWTService.generateToken(tecnico);
+
 
         Categoria categoria = new Categoria();
         categoria.setNome("Suporte");
@@ -124,6 +131,52 @@ public class TicketControllerIntegrationTest {
     }
 
     @Test
+    void deveResolverTicketQuandoRoleTecnico() throws Exception {
+        String criarResponse = mockMvc.perform(post("/tickets")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(TicketCreator.criarTicketRequestBody())))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        long ticketId = objectMapper.readTree(criarResponse).get("id").asLong();
+
+        mockMvc.perform(post("/tickets/%d/resolver".formatted(ticketId))
+                        .header("Authorization", tecnicoToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(TicketStatus.RESOLVIDO.name()));
+    }
+
+    @Test
+    void deveResolverTicketQuandoAdmin() throws Exception {
+        String criarResponse = mockMvc.perform(post("/tickets")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(TicketCreator.criarTicketRequestBody())))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        long ticketId = objectMapper.readTree(criarResponse).get("id").asLong();
+
+        mockMvc.perform(post("/tickets/%d/resolver".formatted(ticketId))
+                        .header("Authorization", adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(TicketStatus.RESOLVIDO.name()));
+    }
+
+    @Test
+    void resolverTicketDeveNegarAcessoParaRoleUser() throws Exception {
+
+        mockMvc.perform(post("/tickets/1/resolver")
+                        .header("Authorization", token))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void deveNegarAcessoSemToken() throws Exception {
         mockMvc.perform(get("/tickets"))
                 .andExpect(status().isUnauthorized());
@@ -133,7 +186,8 @@ public class TicketControllerIntegrationTest {
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/tickets/comentario"))
                 .andExpect(status().isUnauthorized());
-
+        mockMvc.perform(post("/tickets/1/resolver"))
+                .andExpect(status().isUnauthorized());
     }
 }
 

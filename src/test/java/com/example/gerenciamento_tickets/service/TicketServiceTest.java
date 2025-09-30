@@ -7,6 +7,7 @@ import com.example.gerenciamento_tickets.exception.BadRequestException;
 import com.example.gerenciamento_tickets.exception.UnauthorizedException;
 import com.example.gerenciamento_tickets.model.Categoria;
 import com.example.gerenciamento_tickets.model.Ticket;
+import com.example.gerenciamento_tickets.model.TicketStatus;
 import com.example.gerenciamento_tickets.model.Usuario;
 import com.example.gerenciamento_tickets.repository.CategoriaRepository;
 import com.example.gerenciamento_tickets.repository.TicketRepository;
@@ -259,4 +260,60 @@ class TicketServiceTest {
 
         verify(ticketRepository, never()).findAll();
     }
+
+
+    @Test
+    void resolverTicket_deveLancarExcecao_quandoNaoEncontraTicket() {
+        when(ticketRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class, () -> ticketService.resolverTicket(1L, usuario));
+
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+    @Test
+    void resolverTicket_deveLancarExcecao_quandoTicketJaEstaResolvido() {
+        when(ticketRepository.findById(anyLong())).thenReturn(Optional.of(TicketCreator.ticketResolvido()));
+
+        assertThrows(BadRequestException.class, () -> ticketService.resolverTicket(1L, UsuarioCreator.tecnico()));
+
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+    @Test
+    void resolverTicket_deveLancarExcecao_quandoTecnicoNaoForResponsavelDoTicket() {
+        when(ticketRepository.findById(anyLong())).thenReturn(Optional.of(validTicket));
+
+        assertThrows(UnauthorizedException.class, () -> ticketService.resolverTicket(1L, UsuarioCreator.outroTecnico()));
+
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+
+    @Test
+    void resolverTicket_deveResolverTicket_quandoTecnicoEResponsavelDoTicket() {
+        when(ticketRepository.findById(anyLong())).thenReturn(Optional.of(validTicket));
+        when(ticketRepository.save(any())).thenReturn(TicketCreator.ticketResolvido());
+
+        TicketResponseBody response = ticketService.resolverTicket(1L, UsuarioCreator.tecnico());
+
+        assertNotNull(response);
+        assertEquals(TicketStatus.RESOLVIDO, response.status());
+
+        verify(ticketRepository).save(any(Ticket.class));
+    }
+
+    @Test
+    void resolverTicket_deveResolverTicket_quandoUsuarioEAdmin() {
+        when(ticketRepository.findById(anyLong())).thenReturn(Optional.of(validTicket));
+        when(ticketRepository.save(any())).thenReturn(TicketCreator.ticketResolvido());
+
+        TicketResponseBody response = ticketService.resolverTicket(1L, UsuarioCreator.admin());
+
+        assertNotNull(response);
+        assertEquals(TicketStatus.RESOLVIDO, response.status());
+
+        verify(ticketRepository).save(any(Ticket.class));
+    }
+
 }

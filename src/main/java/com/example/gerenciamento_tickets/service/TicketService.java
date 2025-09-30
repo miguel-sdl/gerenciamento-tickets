@@ -111,6 +111,23 @@ public class TicketService {
 
     }
 
+    public TicketResponseBody resolverTicket(Long id, Usuario usuario) {
+        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new BadRequestException("Ticket nao encontrado"));
+
+        if (!eAutorizadoParaAcessar(usuario, ticket)) {
+            throw new UnauthorizedException("Usuario nao autorizado para resolver o ticket");
+        }
+
+        if (ticket.getStatus().equals(TicketStatus.RESOLVIDO)) {
+            throw new BadRequestException("O Ticket ja esta resolvido");
+        }
+
+        ticket.setResolvidoEm(LocalDateTime.now());
+        ticket.setStatus(TicketStatus.RESOLVIDO);
+
+        return TicketMapper.INSTANCE.toTicketResponseBody(ticketRepository.save(ticket));
+    }
+
     private boolean eAutorizadoParaAcessar(Usuario usuario, Ticket ticket) {
         if (usuario.getRole().equals(UserRole.ADMIN)) return true;
 

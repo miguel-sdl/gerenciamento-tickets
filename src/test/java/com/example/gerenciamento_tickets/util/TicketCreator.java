@@ -30,6 +30,21 @@ public class TicketCreator {
                 .build();
     }
 
+    public static Ticket ticketResolvido() {
+        Categoria categoria = CategoriaCreator.validCategoria();
+        return Ticket.builder()
+                .id(1L)
+                .titulo(TITULO)
+                .criadoEm(LocalDateTime.now())
+                .prazoParaResolucao(LocalDateTime.now().plusHours(categoria.getPrazoDefaultEmHoras()))
+                .criadoPor(UsuarioCreator.usuario())
+                .usuarioResponsavel(UsuarioCreator.tecnico())
+                .comentarios(new ArrayList<>(List.of(ComentarioCreator.comentario())))
+                .categoria(categoria)
+                .status(TicketStatus.RESOLVIDO)
+                .build();
+    }
+
     public static Ticket validTicketComOutroUsuarioComoCriadorETecnicoComoResponsavel() {
         Categoria categoria = CategoriaCreator.validCategoria();
         return Ticket.builder()
