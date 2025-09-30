@@ -34,7 +34,7 @@ public class SecurityConfig {
                         .requestMatchers(ENDPOINTS_PERMITIDOS_SEM_AUTENTICAR).permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/admin/**").hasAuthority(ADMIN.name())
-                        .requestMatchers("/ticket/resolver/**").hasAnyAuthority(ADMIN.name(), TECNICO.name())
+                        .requestMatchers("/tickets/*/resolver").hasAnyAuthority(ADMIN.name(), TECNICO.name())
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtSecurityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
