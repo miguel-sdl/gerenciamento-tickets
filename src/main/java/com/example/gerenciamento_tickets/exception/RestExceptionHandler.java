@@ -60,4 +60,16 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(body);
     }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handleNotFoundException(NotFoundException e) {
+        ExceptionResponse body = ExceptionResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .title("Not Found")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now()).build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(body);
+    }
 }

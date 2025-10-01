@@ -4,6 +4,7 @@ import com.example.gerenciamento_tickets.dto.AtualizarCategoriaRequestBody;
 import com.example.gerenciamento_tickets.dto.CategoriaResponseBody;
 import com.example.gerenciamento_tickets.dto.CriarCategoriaRequestBody;
 import com.example.gerenciamento_tickets.exception.BadRequestException;
+import com.example.gerenciamento_tickets.exception.NotFoundException;
 import com.example.gerenciamento_tickets.mapper.CategoriaMapper;
 import com.example.gerenciamento_tickets.model.Categoria;
 import com.example.gerenciamento_tickets.model.UserRole;
@@ -53,7 +54,7 @@ public class AdminTicketService {
     }
 
     public void atualizarCategoria(AtualizarCategoriaRequestBody dto) {
-        Categoria categoria = categoriaRepository.findById(dto.id()).orElseThrow(() -> new BadRequestException("Categoria não encontrada"));
+        Categoria categoria = categoriaRepository.findById(dto.id()).orElseThrow(() -> new NotFoundException("Categoria não encontrada"));
 
         if (dto.nome() != null) categoria.setNome(dto.nome());
         if (dto.prazoDefaultEmHoras() != null) categoria.setPrazoDefaultEmHoras(dto.prazoDefaultEmHoras());

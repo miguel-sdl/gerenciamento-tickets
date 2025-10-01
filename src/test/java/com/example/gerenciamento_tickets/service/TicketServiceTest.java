@@ -4,6 +4,7 @@ import com.example.gerenciamento_tickets.dto.CriarComentarioRequestBody;
 import com.example.gerenciamento_tickets.dto.CriarTicketRequestBody;
 import com.example.gerenciamento_tickets.dto.TicketResponseBody;
 import com.example.gerenciamento_tickets.exception.BadRequestException;
+import com.example.gerenciamento_tickets.exception.NotFoundException;
 import com.example.gerenciamento_tickets.exception.UnauthorizedException;
 import com.example.gerenciamento_tickets.model.Categoria;
 import com.example.gerenciamento_tickets.model.Ticket;
@@ -104,7 +105,7 @@ class TicketServiceTest {
         CriarComentarioRequestBody request = ComentarioCreator.criarComentarioRequestBody();
         when(ticketRepository.findById(any())).thenReturn(Optional.empty());
 
-        assertThrows(BadRequestException.class,
+        assertThrows(NotFoundException.class,
                 () -> ticketService.adicionarComentario(request, usuario));
 
         verify(ticketRepository, never()).save(any());
@@ -178,7 +179,7 @@ class TicketServiceTest {
 
         when(ticketRepository.findById(any())).thenReturn(Optional.empty());
 
-        assertThrows(BadRequestException.class,
+        assertThrows(NotFoundException.class,
                 () -> ticketService.findById(1, usuario));
     }
 
@@ -266,7 +267,7 @@ class TicketServiceTest {
     void resolverTicket_deveLancarExcecao_quandoNaoEncontraTicket() {
         when(ticketRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-        assertThrows(BadRequestException.class, () -> ticketService.resolverTicket(1L, usuario));
+        assertThrows(NotFoundException.class, () -> ticketService.resolverTicket(1L, usuario));
 
         verify(ticketRepository, never()).save(any(Ticket.class));
     }

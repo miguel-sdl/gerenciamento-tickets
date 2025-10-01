@@ -4,6 +4,7 @@ import com.example.gerenciamento_tickets.dto.CriarComentarioRequestBody;
 import com.example.gerenciamento_tickets.dto.CriarTicketRequestBody;
 import com.example.gerenciamento_tickets.dto.TicketResponseBody;
 import com.example.gerenciamento_tickets.exception.BadRequestException;
+import com.example.gerenciamento_tickets.exception.NotFoundException;
 import com.example.gerenciamento_tickets.exception.UnauthorizedException;
 import com.example.gerenciamento_tickets.mapper.TicketMapper;
 import com.example.gerenciamento_tickets.model.*;
@@ -56,7 +57,7 @@ public class TicketService {
 
 
     public TicketResponseBody adicionarComentario(CriarComentarioRequestBody dto, Usuario usuario) {
-        Ticket ticket = ticketRepository.findById(dto.ticketId()).orElseThrow(() -> new BadRequestException("Ticket nao encontrado"));
+        Ticket ticket = ticketRepository.findById(dto.ticketId()).orElseThrow(() -> new NotFoundException("Ticket nao encontrado"));
 
         if (!eAutorizadoParaAcessar(usuario, ticket)) {
             log.warn("Usuario {} nao autorizado tentando comentar no ticket {}", usuario.getId(), ticket.getId());
@@ -77,7 +78,7 @@ public class TicketService {
 
     public TicketResponseBody findById(long id, Usuario usuario) {
         log.info("Buscando Ticket {}", id);
-        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new BadRequestException("Ticket com id " + id + " nao encontrado"));
+        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new NotFoundException("Ticket com id " + id + " nao encontrado"));
 
         if (!eAutorizadoParaAcessar(usuario, ticket)) {
             log.warn("Usuario {} nao autorizado tentando acessar o ticket {}", usuario.getId(), ticket.getId());
@@ -112,7 +113,7 @@ public class TicketService {
     }
 
     public TicketResponseBody resolverTicket(Long id, Usuario usuario) {
-        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new BadRequestException("Ticket nao encontrado"));
+        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new NotFoundException("Ticket nao encontrado"));
 
         if (!eAutorizadoParaAcessar(usuario, ticket)) {
             throw new UnauthorizedException("Usuario nao autorizado para resolver o ticket");

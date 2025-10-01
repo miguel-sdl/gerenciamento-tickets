@@ -2,6 +2,7 @@ package com.example.gerenciamento_tickets.service;
 
 import com.example.gerenciamento_tickets.dto.CategoriaResponseBody;
 import com.example.gerenciamento_tickets.exception.BadRequestException;
+import com.example.gerenciamento_tickets.exception.NotFoundException;
 import com.example.gerenciamento_tickets.model.Categoria;
 import com.example.gerenciamento_tickets.repository.CategoriaRepository;
 import com.example.gerenciamento_tickets.repository.UsuarioRepository;
@@ -80,7 +81,7 @@ class AdminTicketServiceTest {
     void atualizarCategoria_deveLancarExcecao_quandoNaoExisteEncontraCategoriaParaAtualizar() {
         when(categoriaRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-        assertThrows(BadRequestException.class, () -> adminTicketService.atualizarCategoria(CategoriaCreator.atualizarCategoriaRequestBody()));
+        assertThrows(NotFoundException.class, () -> adminTicketService.atualizarCategoria(CategoriaCreator.atualizarCategoriaRequestBody()));
 
         verify(categoriaRepository, never()).save(any());
     }
