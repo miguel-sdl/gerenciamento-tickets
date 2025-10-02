@@ -30,7 +30,7 @@ public class TicketService {
 
         Categoria categoria = categoriaRepository.findByNome(dto.categoria()).orElseThrow(() -> new BadRequestException("Categoria " + dto.categoria() + " não encontrada"));
 
-        Usuario usuarioResponsavel = categoria.getUsuariosResponsaveis().stream().findAny().orElseThrow(() -> new BadRequestException("Nenhum tecnico encontrado para a categoria selecionada"));
+        Usuario usuarioResponsavel = categoria.getUsuariosResponsaveis().parallelStream().findAny().orElseThrow(() -> new BadRequestException("Nenhum tecnico encontrado para a categoria selecionada"));
 
 
         LocalDateTime now = LocalDateTime.now();
