@@ -1,19 +1,18 @@
 package com.example.gerenciamento_tickets.service;
 
-import com.example.gerenciamento_tickets.dto.AtualizarCategoriaRequestBody;
-import com.example.gerenciamento_tickets.dto.CategoriaResponseBody;
-import com.example.gerenciamento_tickets.dto.CriarCategoriaRequestBody;
+import com.example.gerenciamento_tickets.dto.*;
 import com.example.gerenciamento_tickets.exception.BadRequestException;
 import com.example.gerenciamento_tickets.exception.NotFoundException;
 import com.example.gerenciamento_tickets.mapper.CategoriaMapper;
-import com.example.gerenciamento_tickets.model.Categoria;
-import com.example.gerenciamento_tickets.model.UserRole;
-import com.example.gerenciamento_tickets.model.Usuario;
+import com.example.gerenciamento_tickets.mapper.TicketMapper;
+import com.example.gerenciamento_tickets.model.*;
 import com.example.gerenciamento_tickets.repository.CategoriaRepository;
 import com.example.gerenciamento_tickets.repository.TicketRepository;
 import com.example.gerenciamento_tickets.repository.UsuarioRepository;
+import com.example.gerenciamento_tickets.specification.TicketSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -72,5 +71,22 @@ public class AdminTicketService {
 
         categoriaRepository.save(categoria);
         log.info("Atualizando categoria {}", categoria.getId());
+    }
+
+    public List<TicketResponseBody> filterTickets(TicketFilter filter) {
+        log.info("Buscando por tickets utilizando TicketFilter");
+        Specification<Ticket> vencidoSpecification;
+        if (TicketStatus.RESOLVIDO.equals(filter.status())) {
+            vencidoSpecification = TicketSpecification.isResolvidoAposPrazo(filter.vencido());
+        } else {
+            vencidoSpecification = TicketSpecification.isVencido(filter.vencido());
+        }
+
+        return ticketRepository.findAll(
+                        vencidoSpecification
+                                .and(TicketSpecification.hasUsuarioResponsavel(filter.usuarioId())
+                                        .and(TicketSpecification.hasCategoria(filter.categoria())
+                                                .and(TicketSpecification.hasStatus(filter.status())))))
+                .stream().map(TicketMapper.INSTANCE::toTicketResponseBody).toList();
     }
 }

@@ -1,8 +1,7 @@
 package com.example.gerenciamento_tickets.controller;
 
-import com.example.gerenciamento_tickets.dto.AtualizarCategoriaRequestBody;
-import com.example.gerenciamento_tickets.dto.CategoriaResponseBody;
-import com.example.gerenciamento_tickets.dto.CriarCategoriaRequestBody;
+import com.example.gerenciamento_tickets.dto.*;
+import com.example.gerenciamento_tickets.model.TicketStatus;
 import com.example.gerenciamento_tickets.service.AdminTicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,12 +9,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/admin/tickets")
 public class AdminTicketsController {
 
     private final AdminTicketService adminTicketService;
+
+    @GetMapping
+    public ResponseEntity<List<TicketResponseBody>> filtrarTickets(@RequestParam(required = false) Long usuarioId,
+                                                                   @RequestParam(required = false) TicketStatus status,
+                                                                   @RequestParam(required = false) String categoria,
+                                                                   @RequestParam(required = false) Boolean vencido) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(adminTicketService.filterTickets(new TicketFilter(usuarioId, categoria, status, vencido)));
+    }
+
 
     @PostMapping("/categoria")
     public ResponseEntity<CategoriaResponseBody> criarCategoria(@RequestBody @Valid CriarCategoriaRequestBody dto) {
