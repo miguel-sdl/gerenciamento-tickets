@@ -40,4 +40,10 @@ public class AdminTicketsController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @PutMapping
+    public ResponseEntity<Void> atualizarTicket(@RequestBody @Valid AtualizarTicketRequestBody dto) {
+        adminTicketService.atualzarTicket(dto);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
 }

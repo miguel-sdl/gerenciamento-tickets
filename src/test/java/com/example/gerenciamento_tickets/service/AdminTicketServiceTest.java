@@ -4,9 +4,12 @@ import com.example.gerenciamento_tickets.dto.CategoriaResponseBody;
 import com.example.gerenciamento_tickets.exception.BadRequestException;
 import com.example.gerenciamento_tickets.exception.NotFoundException;
 import com.example.gerenciamento_tickets.model.Categoria;
+import com.example.gerenciamento_tickets.model.Ticket;
 import com.example.gerenciamento_tickets.repository.CategoriaRepository;
+import com.example.gerenciamento_tickets.repository.TicketRepository;
 import com.example.gerenciamento_tickets.repository.UsuarioRepository;
 import com.example.gerenciamento_tickets.util.CategoriaCreator;
+import com.example.gerenciamento_tickets.util.TicketCreator;
 import com.example.gerenciamento_tickets.util.UsuarioCreator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +35,9 @@ class AdminTicketServiceTest {
 
     @Mock
     private UsuarioRepository usuarioRepository;
+
+    @Mock
+    private TicketRepository ticketRepository;
 
     private Categoria categoria;
 
@@ -109,4 +115,53 @@ class AdminTicketServiceTest {
         verify(categoriaRepository).save(any(Categoria.class));
     }
 
+    @Test
+    void atualizarTicket_deveLancarExcecao_quandoNaoEncontraTicket() {
+        when(ticketRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> adminTicketService.atualzarTicket(TicketCreator.atualizarTicketRequestBody()));
+
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+    @Test
+    void atualizarTicket_deveLancarExcecao_quandoNaoEncontraTecnico() {
+        when(ticketRepository.findById(anyLong())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(usuarioRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class, () -> adminTicketService.atualzarTicket(TicketCreator.atualizarTicketRequestBody()));
+
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+    @Test
+    void atualizarTicket_deveLancarExcecao_quandoTicketJaResolvido() {
+        when(ticketRepository.findById(anyLong())).thenReturn(Optional.of(TicketCreator.ticketResolvido()));
+
+        assertThrows(BadRequestException.class, () -> adminTicketService.atualzarTicket(TicketCreator.atualizarTicketRequestBody()));
+
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+
+    @Test
+    void atualizarTicket_deveLancarExcecao_uandoAlgumUsuarioForRoleUser() {
+        when(ticketRepository.findById(anyLong())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(usuarioRepository.findById(any())).thenReturn(Optional.of(UsuarioCreator.usuario()));
+
+        assertThrows(BadRequestException.class,
+                () -> adminTicketService.atualzarTicket(TicketCreator.atualizarTicketRequestBody()));
+
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+    @Test
+    void atualizarTicket_deveAtualizarTicket() {
+        when(ticketRepository.findById(anyLong())).thenReturn(Optional.of(TicketCreator.validTicket()));
+        when(usuarioRepository.findById(any())).thenReturn(Optional.of(UsuarioCreator.tecnico()));
+
+        assertDoesNotThrow(() -> adminTicketService.atualzarTicket(TicketCreator.atualizarTicketRequestBody()));
+
+        verify(ticketRepository).save(any(Ticket.class));
+    }
 }

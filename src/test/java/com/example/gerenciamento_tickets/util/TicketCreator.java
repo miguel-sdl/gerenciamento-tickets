@@ -1,5 +1,6 @@
 package com.example.gerenciamento_tickets.util;
 
+import com.example.gerenciamento_tickets.dto.AtualizarTicketRequestBody;
 import com.example.gerenciamento_tickets.dto.CriarTicketRequestBody;
 import com.example.gerenciamento_tickets.model.Categoria;
 import com.example.gerenciamento_tickets.model.Ticket;
@@ -92,5 +93,9 @@ public class TicketCreator {
 
     public static CriarTicketRequestBody criarTicketRequestBody() {
         return new CriarTicketRequestBody(TITULO, DESCRICAO, CATEGORIA);
+    }
+
+    public static AtualizarTicketRequestBody atualizarTicketRequestBody() {
+        return new AtualizarTicketRequestBody(1L, 10, 1L);
     }
 }

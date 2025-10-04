@@ -1,6 +1,7 @@
 package com.example.gerenciamento_tickets.integration;
 
 import com.example.gerenciamento_tickets.dto.AtualizarCategoriaRequestBody;
+import com.example.gerenciamento_tickets.dto.AtualizarTicketRequestBody;
 import com.example.gerenciamento_tickets.model.Categoria;
 import com.example.gerenciamento_tickets.model.Ticket;
 import com.example.gerenciamento_tickets.model.TicketStatus;
@@ -10,6 +11,7 @@ import com.example.gerenciamento_tickets.repository.TicketRepository;
 import com.example.gerenciamento_tickets.repository.UsuarioRepository;
 import com.example.gerenciamento_tickets.security.TokenJWTService;
 import com.example.gerenciamento_tickets.util.CategoriaCreator;
+import com.example.gerenciamento_tickets.util.TicketCreator;
 import com.example.gerenciamento_tickets.util.UsuarioCreator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
@@ -148,6 +150,18 @@ public class AdminTicketIntegrationTest {
                         .header("Authorization", "Bearer " + tecnicoToken))
                 .andExpect(status().isForbidden());
 
+        mockMvc.perform(put("/admin/tickets")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(TicketCreator.atualizarTicketRequestBody())))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(put("/admin/tickets")
+                        .header("Authorization", "Bearer " + tecnicoToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(TicketCreator.atualizarTicketRequestBody())))
+                .andExpect(status().isForbidden());
+
     }
 
     @Test
@@ -169,10 +183,15 @@ public class AdminTicketIntegrationTest {
                         .param("status", "RESOLVIDO")
                         .param("vencido", "true"))
                 .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(put("/admin/tickets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(TicketCreator.atualizarTicketRequestBody())))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void deveAtualizarSomenteCamposInformados_QuandoAdmin() throws Exception {
+    void atualizarCategoria_deveAtualizarSomenteCamposInformados_QuandoAdmin() throws Exception {
         var criarCategoriDto = CategoriaCreator.criarCategoriaRequestBody();
 
         String content = mockMvc.perform(post("/admin/tickets/categoria")
@@ -228,6 +247,31 @@ public class AdminTicketIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", Matchers.hasSize(1)))
                 .andExpect(jsonPath("$[0].id").value(ticketParaSerEncontrado.getId()));
+
+    }
+
+    @Test
+    void atualizarTicket_deveAtualizarSomenteCamposInformados_QuandoAdmin() throws Exception {
+        Long id = ticket.getId();
+        String titulo = ticket.getTitulo();
+        TicketStatus status = ticket.getStatus();
+        Usuario usuarioResponsavel = ticket.getUsuarioResponsavel();
+        LocalDateTime prazoParaResolucao = ticket.getPrazoParaResolucao();
+
+        var atualizarTicketRequestBody = new AtualizarTicketRequestBody(id, 10, null);
+
+        mockMvc.perform(put("/admin/tickets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(atualizarTicketRequestBody))
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNoContent());
+
+        Ticket depoisDeAtualizar = ticketRepository.findById(id).orElseThrow();
+
+        Assertions.assertEquals(titulo, depoisDeAtualizar.getTitulo());
+        Assertions.assertEquals(usuarioResponsavel, depoisDeAtualizar.getUsuarioResponsavel());
+        Assertions.assertEquals(status, depoisDeAtualizar.getStatus());
+        Assertions.assertEquals(prazoParaResolucao.plusHours(10), depoisDeAtualizar.getPrazoParaResolucao());
 
     }
 }

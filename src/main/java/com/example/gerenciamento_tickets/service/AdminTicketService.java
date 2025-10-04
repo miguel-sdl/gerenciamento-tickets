@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -88,5 +89,30 @@ public class AdminTicketService {
                                         .and(TicketSpecification.hasCategoria(filter.categoria())
                                                 .and(TicketSpecification.hasStatus(filter.status())))))
                 .stream().map(TicketMapper.INSTANCE::toTicketResponseBody).toList();
+    }
+
+    public void atualzarTicket(AtualizarTicketRequestBody dto) {
+        Ticket ticket = ticketRepository.findById(dto.id()).orElseThrow(() -> new NotFoundException("Ticket não encontrado"));
+
+        if (ticket.getStatus().equals(TicketStatus.RESOLVIDO)) {
+            throw new BadRequestException("Nao e possivel atualizar um ticket resolvido");
+        }
+
+        if (dto.prazoParaAdicionar() != null) {
+            LocalDateTime prazoAtual = ticket.getPrazoParaResolucao();
+            ticket.setPrazoParaResolucao(prazoAtual.plusHours(dto.prazoParaAdicionar()));
+        }
+
+        if (dto.usuarioResponsavelID() != null) {
+            Usuario usuarioResponsavel = usuarioRepository.findById(dto.usuarioResponsavelID()).orElseThrow(() -> new BadRequestException("Usuario Responsavel nao encontrado"));
+
+            if (usuarioResponsavel.getRole().equals(UserRole.USER)) {
+                throw new BadRequestException("Nao e permitido que um usuario comum seja responsavel por um ticket");
+            }
+
+            ticket.setUsuarioResponsavel(usuarioResponsavel);
+        }
+        log.info("Atualizando ticket {}", ticket.getId());
+        ticketRepository.save(ticket);
     }
 }
