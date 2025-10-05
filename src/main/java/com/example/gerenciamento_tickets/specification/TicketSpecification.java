@@ -27,8 +27,8 @@ public class TicketSpecification {
         return (root, query, cb) -> {
             LocalDateTime now = LocalDateTime.now();
             if (vencido == null) return null;
-            return vencido ? cb.lessThan(root.get("prazoParaResolucao"), now)
-                    : cb.greaterThan(root.get("prazoParaResolucao"), now);
+            return vencido ? cb.and(cb.lessThan(root.get("prazoParaResolucao"), now), cb.equal(root.get("status"), TicketStatus.ABERTO))
+                    : cb.and(cb.greaterThan(root.get("prazoParaResolucao"), now), cb.equal(root.get("status"), TicketStatus.ABERTO));
         };
     }
 

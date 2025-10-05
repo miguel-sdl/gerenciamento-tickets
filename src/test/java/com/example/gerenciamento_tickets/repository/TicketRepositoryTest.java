@@ -86,9 +86,9 @@ class TicketRepositoryTest {
         ticketRepository.save(Ticket.builder()
                 .usuarioResponsavel(tecnico)
                 .status(TicketStatus.RESOLVIDO)
-                .criadoEm(LocalDateTime.now())
-                .prazoParaResolucao(LocalDateTime.now().plusHours(1))
-                .resolvidoEm(LocalDateTime.now().plusHours(2))
+                .criadoEm(LocalDateTime.now().minusHours(2))
+                .prazoParaResolucao(LocalDateTime.now().minusHours(1))
+                .resolvidoEm(LocalDateTime.now())
                 .categoria(categoria)
                 .build());
 
