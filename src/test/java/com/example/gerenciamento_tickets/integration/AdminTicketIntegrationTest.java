@@ -245,9 +245,21 @@ public class AdminTicketIntegrationTest {
                         .param("vencido", "true")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", Matchers.hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(ticketParaSerEncontrado.getId()));
+                .andExpect(jsonPath("$.content", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$.content[0].id").value(ticketParaSerEncontrado.getId()));
 
+    }
+
+    @Test
+    void get_Tickets_deveFiltrarTicketsComPaginacao() throws Exception {
+        mockMvc.perform(get("/admin/tickets")
+                        .param("status", "ABERTO")
+                        .param("page", "0")
+                        .param("size", "5")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.page.size").value(5));
     }
 
     @Test

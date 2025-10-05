@@ -12,6 +12,8 @@ import com.example.gerenciamento_tickets.repository.UsuarioRepository;
 import com.example.gerenciamento_tickets.specification.TicketSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -74,7 +76,7 @@ public class AdminTicketService {
         log.info("Atualizando categoria {}", categoria.getId());
     }
 
-    public List<TicketResponseBody> filterTickets(TicketFilter filter) {
+    public Page<TicketResponseBody> filterTickets(TicketFilter filter, Pageable pageable) {
         log.info("Buscando por tickets utilizando TicketFilter");
         Specification<Ticket> vencidoSpecification;
         if (TicketStatus.RESOLVIDO.equals(filter.status())) {
@@ -87,8 +89,8 @@ public class AdminTicketService {
                         vencidoSpecification
                                 .and(TicketSpecification.hasUsuarioResponsavel(filter.usuarioId())
                                         .and(TicketSpecification.hasCategoria(filter.categoria())
-                                                .and(TicketSpecification.hasStatus(filter.status())))))
-                .stream().map(TicketMapper.INSTANCE::toTicketResponseBody).toList();
+                                                .and(TicketSpecification.hasStatus(filter.status())))), pageable)
+                .map(TicketMapper.INSTANCE::toTicketResponseBody);
     }
 
     public void atualzarTicket(AtualizarTicketRequestBody dto) {

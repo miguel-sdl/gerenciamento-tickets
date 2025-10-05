@@ -5,11 +5,11 @@ import com.example.gerenciamento_tickets.model.TicketStatus;
 import com.example.gerenciamento_tickets.service.AdminTicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -19,12 +19,13 @@ public class AdminTicketsController {
     private final AdminTicketService adminTicketService;
 
     @GetMapping
-    public ResponseEntity<List<TicketResponseBody>> filtrarTickets(@RequestParam(required = false) Long usuarioId,
+    public ResponseEntity<Page<TicketResponseBody>> filtrarTickets(@RequestParam(required = false) Long usuarioId,
                                                                    @RequestParam(required = false) TicketStatus status,
                                                                    @RequestParam(required = false) String categoria,
-                                                                   @RequestParam(required = false) Boolean vencido) {
+                                                                   @RequestParam(required = false) Boolean vencido,
+                                                                   Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(adminTicketService.filterTickets(new TicketFilter(usuarioId, categoria, status, vencido)));
+                .body(adminTicketService.filterTickets(new TicketFilter(usuarioId, categoria, status, vencido), pageable));
     }
 
 
