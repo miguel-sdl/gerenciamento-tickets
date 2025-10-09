@@ -4,8 +4,6 @@ import com.example.gerenciamento_tickets.exception.ExceptionResponse;
 import com.example.gerenciamento_tickets.exception.UnauthorizedException;
 import com.example.gerenciamento_tickets.model.Usuario;
 import com.example.gerenciamento_tickets.repository.UsuarioRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,14 +64,15 @@ public class JWTSecurityFilter extends OncePerRequestFilter {
 
     private String getToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null) throw new UnauthorizedException("Token JWT nao encaminhado no header authorization");
+        if (authHeader == null)
+            throw new UnauthorizedException("Token JWT nao encaminhado no header authorization " + request.getRequestURI());
 
         return authHeader.replace("Bearer ", "");
     }
 
     private boolean eNecessarioAutenticar(HttpServletRequest request) {
         String requestURI = request.getRequestURI();
-        if (requestURI.contains("swagger") || requestURI.contains("api-docs")) return false;
+        if (requestURI.contains("swagger") || requestURI.contains("api-docs") || requestURI.contains("/actuator")) return false;
         return !Arrays.asList(SecurityConfig.ENDPOINTS_PERMITIDOS_SEM_AUTENTICAR).contains(requestURI);
     }
 

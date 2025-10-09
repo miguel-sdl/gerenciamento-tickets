@@ -20,7 +20,7 @@ import static com.example.gerenciamento_tickets.model.UserRole.TECNICO;
 @Configuration
 public class SecurityConfig {
 
-    public static final String[] ENDPOINTS_PERMITIDOS_SEM_AUTENTICAR = new String[]{"/swagger-ui/**", "/v3/api-docs/**", "/auth/register", "/auth/login"};
+    public static final String[] ENDPOINTS_PERMITIDOS_SEM_AUTENTICAR = new String[]{"/swagger-ui/**", "/v3/api-docs/**", "/auth/register", "/auth/login", "/actuator/**"};
 
     @Autowired
     private JWTSecurityFilter jwtSecurityFilter;
