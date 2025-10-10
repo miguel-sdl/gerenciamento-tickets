@@ -9,6 +9,19 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: prometheus
+    restart: always
+    volumes:
+      - ./src/main/resources/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
 
+  grafana:
+    image: grafana/grafana:12.2.0-16557133545
+    container_name: grafana
+    ports:
+      - "3000:3000"
 volumes:
   db_data:
