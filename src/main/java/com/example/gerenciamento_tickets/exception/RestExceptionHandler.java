@@ -1,5 +1,6 @@
 package com.example.gerenciamento_tickets.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @ControllerAdvice
 public class RestExceptionHandler {
 
@@ -21,6 +23,8 @@ public class RestExceptionHandler {
                 .title("Bad Request")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now()).build();
+
+        log.warn("Resolved [{}: {}]", e.getClass().getName(), e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(body);
     }
@@ -39,6 +43,7 @@ public class RestExceptionHandler {
                 .fieldErrors(fieldErrors)
                 .build();
 
+        log.warn("Resolved [{}: {}]", e.getClass().getName(), e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(body);
 
@@ -46,6 +51,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<Void> handleUnauthorizedException(UnauthorizedException e) {
+        log.warn("Resolved [{}: {}]", e.getClass().getName(), e.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
@@ -57,6 +63,7 @@ public class RestExceptionHandler {
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now()).build();
 
+        log.warn("Resolved [{}: {}]", e.getClass().getName(), e.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(body);
     }
@@ -69,6 +76,7 @@ public class RestExceptionHandler {
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now()).build();
 
+        log.warn("Resolved [{}: {}]", e.getClass().getName(), e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(body);
     }
