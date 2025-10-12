@@ -1,4 +1,19 @@
 services:
+  app:
+    build: .
+    environment:
+      DB_URL: jdbc:mysql://database:3306/db
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      JWT_SECRET: jwt-secret
+      JWT_EXPIRATION: 3600000
+    depends_on:
+      - database
+    ports:
+      - "8080:8080"
+    networks:
+      - tickets-net
+
   database:
     image: mysql:8.4.6
     environment:
@@ -8,6 +23,8 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - tickets-net
 
   prometheus:
     image: prom/prometheus:v3.5.0
@@ -17,11 +34,22 @@ services:
       - ./src/main/resources/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    networks:
+      - tickets-net
 
   grafana:
     image: grafana/grafana:12.2.0-16557133545
     container_name: grafana
+    depends_on:
+      - prometheus
     ports:
       - "3000:3000"
+    networks:
+      - tickets-net
+
+networks:
+  tickets-net:
+    driver: bridge
+
 volumes:
   db_data:
