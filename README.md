@@ -7,7 +7,7 @@ Sistema de gerenciamento de tickets para **Help Desk / Suporte Técnico**, desen
 - Documentação **Swagger / OpenAPI**
 - Testes: unitários e de integração
 
----
+
 
 ## 🚀 Tecnologias utilizadas
 - Java 21 
@@ -18,7 +18,7 @@ Sistema de gerenciamento de tickets para **Help Desk / Suporte Técnico**, desen
 - Prometheus, Grafana
 - JUnit 5, Mockito, MockMvc
 
----
+
 
 ## 🔐 Endpoints Principais
 ### 🔑 Autenticação
@@ -43,11 +43,8 @@ Para mais informações de endpoints a API fornece documentação automática vi
 http://localhost:8080/swagger-ui/index.html
 ```
 ## ▶️ Como executar
-1. Gerar o JAR:
-```bash
-mvn clean package -DskipTests
-```
-2. Subir toda a stack (app, mysql, prometheus, grafana)
+
+1. Build e execução completa com Docker (app, mysql, prometheus, grafana)
 ```bash 
 docker-compose up --build
 ```
